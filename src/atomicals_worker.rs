@@ -431,7 +431,6 @@ impl AtomicalsWorker {
         };
 
         psbt.inputs[0] = Input {
-            // TODO: Check.
             witness_utxo: Some(commit_output.to_owned()),
             tap_internal_key: Some(reveal_spend_info.internal_key()),
             tap_merkle_root: reveal_spend_info.merkle_root(),

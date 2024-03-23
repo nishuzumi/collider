@@ -45,8 +45,6 @@ pub struct PayloadWrapper {
 #[derive(Debug, Serialize, Clone)]
 pub struct Payload {
     pub bitworkc: String,
-    // TODO: This field is unnecessary in the current version.
-    // pub bitworkr: Option<String>,
     pub mint_ticker: String,
     pub nonce: u64,
     pub time: u64,
