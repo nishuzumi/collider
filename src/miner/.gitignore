@@ -1,0 +1,6 @@
+*
+
+!mod.rs
+!cpu.rs
+!gpu.rs
+!ext/sha256d.cl
