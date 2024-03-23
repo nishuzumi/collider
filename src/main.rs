@@ -4,10 +4,8 @@ use bitcoin::consensus::encode;
 use bitcoin::key::Secp256k1;
 use bitcoin::Network;
 use colored::*;
-use tracing::{event, info, info_span, Level, subscriber};
-use tracing::span::Record;
+use tracing::{info, subscriber};
 use tracing_subscriber::fmt::format::Format;
-use tracing_subscriber::FmtSubscriber;
 
 use atomicals_electrumx::{Api, ElectrumXBuilder};
 use atomicals_packer::AtomicalsPacker;

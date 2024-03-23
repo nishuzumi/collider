@@ -16,10 +16,8 @@ use bitcoin::sighash::{Prevouts, SighashCache};
 use bitcoin::taproot::{LeafVersion, Signature, TaprootBuilder, TaprootSpendInfo};
 use bitcoin::transaction::Version;
 use eyre::Result;
-use hex;
 use indicatif::{ProgressBar, ProgressStyle};
 use tokio::sync::oneshot;
-use tracing::Instrument;
 
 use atomicals_electrumx::r#type::Utxo;
 
@@ -31,7 +29,7 @@ use crate::util::{GLOBAL_OPTS, tx2bytes};
 #[derive(Debug, Clone)]
 struct PayloadScript {
     // payload: PayloadWrapper,
-    payload_encoded: Vec<u8>,
+    // payload_encoded: Vec<u8>,
     funding_spk: ScriptBuf,
     reveal_script: ScriptBuf,
     reveal_spend_info: TaprootSpendInfo,
@@ -122,7 +120,7 @@ impl AtomicalsWorker {
         let funding_spk = funding_wallet.p2tr_address(secp).script_pubkey();
         Ok(PayloadScript {
             // payload,
-            payload_encoded,
+            // payload_encoded,
             funding_spk,
             reveal_script,
             reveal_spend_info,

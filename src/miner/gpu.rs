@@ -3,7 +3,6 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use bitcoin::Sequence;
 use ocl::{Buffer, MemFlags, OclPrm, ProQue};
-use rayon::prelude::*;
 
 use crate::miner::{find_first_sequence_position, find_time_nonce_script_position, Miner};
 use crate::utils::bitworkc::BitWork;
@@ -116,7 +115,7 @@ pub fn find_seq_by_gpu(
     let pos = find_first_sequence_position(data) as u32;
 
     let (pro_que, data_buffer, params_buffer, bit_work_buffer) =
-      generate_pro_que_params("sha256d".to_string(), data, target, pos);
+      generate_pro_que_params(data, target, pos);
 
     let mut output = vec![HashResult::default()];
     let output_buf = Buffer::<HashResult>::builder()
@@ -179,7 +178,7 @@ pub fn find_return_nonce_by_gpu(
     let mut offset = start;
 
     let (pro_que, data_buffer, params_buffer, bit_work_buffer) =
-        generate_pro_que_params("sha256d_64".to_string(), data, target, pos);
+        generate_pro_que_params(data, target, pos);
 
     let mut output = vec![HashResult64::default()];
     let output_buf = Buffer::<HashResult64>::builder()
@@ -227,7 +226,6 @@ pub fn find_return_nonce_by_gpu(
 }
 
 pub fn generate_pro_que_params(
-    func: String,
     data: &[u8],
     target: BitWork,
     pos: u32,

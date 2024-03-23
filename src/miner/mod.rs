@@ -1,6 +1,5 @@
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU32, AtomicU64};
-use std::time::Duration;
+use std::sync::atomic::AtomicU64;
 
 use bitcoin::opcodes::all::OP_RETURN;
 use log::info;
