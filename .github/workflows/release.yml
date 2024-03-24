@@ -60,6 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      discussions: write
     needs: [build]
     steps:
       - name: Download artifacts
