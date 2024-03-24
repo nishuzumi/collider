@@ -24,7 +24,7 @@ use atomicals_electrumx::r#type::Utxo;
 use crate::atomicals_packer::{Fees, TickerData};
 use crate::miner::Miner;
 use crate::util;
-use crate::util::{GLOBAL_OPTS, tx2bytes};
+use crate::util::{format_speed, GLOBAL_OPTS, tx2bytes};
 
 #[derive(Debug, Clone)]
 struct PayloadScript {
@@ -95,7 +95,7 @@ impl AtomicalsWorker {
 
         let payload_encoded = util::cbor(&payload)?;
 
-        let funding_wallet = &GLOBAL_OPTS.funding_wallet;
+        let funding_wallet = GLOBAL_OPTS.funding_wallet.as_ref().unwrap();
         let funding_wallet_x_only_public_key = funding_wallet.x_only_public_key(secp);
 
         let reveal_script =
@@ -217,7 +217,7 @@ impl AtomicalsWorker {
             ..
         } = data.clone();
 
-        let funding_wallet = &GLOBAL_OPTS.funding_wallet;
+        let funding_wallet = GLOBAL_OPTS.funding_wallet.as_ref().unwrap();
 
         let commit_input = vec![TxIn {
             previous_output: OutPoint::new(funding_utxo.txid.parse()?, funding_utxo.vout),
@@ -532,18 +532,6 @@ where
     }
     bar.finish();
 }
-fn format_speed(speed: f64) -> String {
-    const UNITS: [&str; 4] = ["", "K", "M", "B"];
-    let mut speed = speed;
-    let mut unit_index = 0;
-
-    while speed >= 1000.0 && unit_index < UNITS.len() - 1 {
-        speed /= 1000.0;
-        unit_index += 1;
-    }
-
-    format!("{:.2}{}", speed, UNITS[unit_index])
-}
 #[cfg(test)]
 mod test {
     use std::sync::atomic::Ordering;
@@ -573,12 +561,12 @@ mod test {
         let ft = packer.get_bitwork_info("b911".to_string()).await.unwrap();
         info!("{:?}", ft);
         let worker_data = packer
-            .generate_worker(&ft, GLOBAL_OPTS.primary_wallet.clone())
+            .generate_worker(&ft, GLOBAL_OPTS.primary_wallet.as_ref().unwrap().clone())
             .await
             .unwrap();
         info!("{:?}", worker_data);
 
-        let funding_wallet = &GLOBAL_OPTS.funding_wallet.p2tr_address(&worker_data.secp);
+        let funding_wallet = &GLOBAL_OPTS.funding_wallet.as_ref().unwrap().p2tr_address(&worker_data.secp);
         let utxo = electrumx
             .wait_until_utxo(funding_wallet.to_string(), worker_data.satsbyte)
             .await
@@ -588,7 +576,7 @@ mod test {
         let miner = CpuMiner::new();
 
         let workder = AtomicalsWorker::new(
-            GLOBAL_OPTS.funding_wallet.keypair(&worker_data.secp),
+            GLOBAL_OPTS.funding_wallet.as_ref().unwrap().keypair(&worker_data.secp),
             Box::new(miner),
         );
 
@@ -614,7 +602,7 @@ mod test {
         let tx = "01000000012a912f654cc1bd88da5b8a54c52b6dd60b6e831bfba52b32c1314cd17c5634120100000000feffffff024c05000000000000225120e3d5a4789dc4982cfda563c8c23f988f505e481bf9602f7ba5b1045e44e0392000b09a3b0000000022512032447fe28750a7e2b18af49d89a359a81c69bbf6f3db05feb7e8e1688f37e4c200000000";
         let tx = hex::decode(tx).unwrap();
         let miner = CpuMiner::new();
-        let bitwork = BitWork::new("1234567.11".to_string()).unwrap();
+        let bitwork = BitWork::new("1234567.14".to_string()).unwrap();
         let secp = bitcoin::secp256k1::Secp256k1::new();
 
         let now = Instant::now();

@@ -46,3 +46,4 @@ log = "0.4.21"
 indicatif = { version = "0.17.8", features = ["improved_unicode"] }
 ocl = { version = "0.19.6" }
 colored = "2.1.0"
+prettytable-rs = "0.10.0"

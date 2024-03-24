@@ -76,6 +76,10 @@ impl GpuMiner {
     }
 }
 impl Miner for GpuMiner {
+    fn name(&self) -> &'static str { 
+        "GPU"
+    }
+
     fn mine_commit(
         &self,
         tx: &[u8],

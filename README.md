@@ -101,14 +101,23 @@ MINER=cpu
 ```
 
 ## Performance
-
 The following table shows the performance benchmarks
+```
+CPU Name: Apple M3 Max
+GPU Name: Apple M3 Max (OpenCL Version: 1.2)
++--------+------------------------+------------------------+
+| Device | Commit Hash Rate (M/s) | Reveal Hash Rate (M/s) |
++--------+------------------------+------------------------+
+| CPU    | 91.41M/s               | 150.45M/s              |
++--------+------------------------+------------------------+
+| GPU    | 462.07M/s              | 604.54M/s              |
++--------+------------------------+------------------------+
+```
 
-| Device       | Commit Speed (ops/s) | Reveal Speed (ops/s) |
-|--------------|----------------------|----------------------|
-| Apple M3 GPU | 3M                   | 5M                   |
-| Apple M3 CPU | 1M                   | 1.5M                 |
-
+You can test your device by running the following command:
+```shell
+./collider --benchmark
+```
 ## Contributing
 
 Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.

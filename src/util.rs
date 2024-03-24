@@ -1,4 +1,5 @@
 use std::env;
+use std::process::Command;
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -18,6 +19,8 @@ use structopt::StructOpt;
 #[derive(Clone, Debug, StructOpt)]
 #[structopt(name = "Collier", about = "A collier for atomicals.")]
 pub struct Opt {
+    #[structopt(long)]
+    pub benchmark: bool,
     /// Sets the level of verbosity
     #[structopt(short, long)]
     pub verbose: bool,
@@ -31,16 +34,16 @@ pub struct Opt {
     #[structopt(short, long, default_value = "50", env = "BASE_FEE")]
     pub base_fee: u64,
 
-    #[structopt(short, long, env = "PRIMARY_WALLET")]
-    pub primary_wallet: String,
+    #[structopt(short, long, env = "PRIMARY_WALLET", required_unless("benchmark"))]
+    pub primary_wallet: Option<String>,
 
-    #[structopt(short, long, env = "FUNDING_WALLET", parse(try_from_str = WifPrivateKey::from_str))]
-    pub funding_wallet: WifPrivateKey,
-    
+    #[structopt(short, long, env = "FUNDING_WALLET", parse(try_from_str = WifPrivateKey::from_str),required_unless("benchmark"))]
+    pub funding_wallet: Option<WifPrivateKey>,
+
     #[structopt(short, long, env = "TICKER")]
-    pub ticker:String,
-    
-    #[structopt(short, long, env = "MINER",default_value = "cpu")]
+    pub ticker: Option<String>,
+
+    #[structopt(short, long, env = "MINER", default_value = "cpu",required_unless("benchmark"), possible_values = &["cpu", "gpu"])]
     pub miner: String,
 }
 
@@ -48,18 +51,19 @@ lazy_static! {
     pub static ref GLOBAL_OPTS: Opt = {
         if cfg!(test) {
             Opt {
+                benchmark: false,
                 verbose: false,
                 api_url: None,
                 testnet: true,
                 base_fee: 50,
-                ticker: "atom".to_string(),
-                primary_wallet: env::var("PRIMARY_WALLET").expect("PRIMARY_WALLET is not set"),
-                funding_wallet: WifPrivateKey::from_str(
+                ticker: Option::from("atom".to_string()),
+                primary_wallet: Option::from(env::var("PRIMARY_WALLET").expect("PRIMARY_WALLET is not set")),
+                funding_wallet: Option::from(WifPrivateKey::from_str(
                     env::var("FUNDING_WALLET")
                         .expect("FUNDING_WALLET is not set")
                         .as_str(),
                 )
-                .unwrap(),
+                .unwrap()),
                 miner: "gpu".to_string(),
             }
         } else {
@@ -181,4 +185,56 @@ pub fn build_reveal_script(
         .fold(b, |b, c| b.push_slice(<&PushBytes>::try_from(c).unwrap()))
         .push_opcode(OP_ENDIF)
         .into_script()
+}
+
+pub fn format_speed(speed: f64) -> String {
+    const UNITS: [&str; 4] = ["", "K", "M", "B"];
+    let mut speed = speed;
+    let mut unit_index = 0;
+
+    while speed >= 1000.0 && unit_index < UNITS.len() - 1 {
+        speed /= 1000.0;
+        unit_index += 1;
+    }
+
+    format!("{:.2}{}", speed, UNITS[unit_index])
+}
+
+#[cfg(target_os = "macos")]
+pub fn get_cpu_desc() -> String {
+    let output = Command::new("sysctl")
+        .arg("-n")
+        .arg("machdep.cpu.brand_string")
+        .output()
+        .expect("failed to execute process");
+
+    String::from_utf8_lossy(&output.stdout).trim().to_string()
+}
+
+#[cfg(target_os = "linux")]
+pub fn get_cpu_desc() -> String {
+    let file = std::fs::File::open("/proc/cpuinfo").expect("Could not open /proc/cpuinfo");
+    let reader = std::io::BufReader::new(file);
+
+    for line in reader.lines() {
+        if let Ok(line) = line {
+            if line.starts_with("model name") {
+                let cpu_desc = line.split(':').nth(1).expect("Could not split line").trim();
+                return cpu_desc.to_string();
+            }
+        }
+    }
+
+    "Unknown".to_string()
+}
+
+#[cfg(target_os = "windows")]
+pub fn get_cpu_desc() -> String {
+    let output = Command::new("wmic")
+        .args(&["cpu", "get", "name"])
+        .output()
+        .expect("failed to execute process");
+
+    let output = String::from_utf8_lossy(&output.stdout);
+    output.trim().split('\n').nth(1).unwrap_or("Unknown").trim().to_string()
 }

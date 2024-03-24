@@ -8,9 +8,10 @@ use crate::util::GLOBAL_OPTS;
 use crate::utils::bitworkc::BitWork;
 
 pub mod cpu;
-mod gpu;
+pub mod gpu;
 
 pub trait Miner {
+    fn name(&self) -> &'static str;
     fn mine_commit(
         &self,
         tx: &[u8],

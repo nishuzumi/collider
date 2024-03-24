@@ -24,6 +24,10 @@ impl CpuMiner {
     }
 }
 impl Miner for CpuMiner {
+    fn name(&self) -> &'static str {
+       "CPU" 
+    }
+
     fn mine_commit(
         &self,
         tx: &[u8],

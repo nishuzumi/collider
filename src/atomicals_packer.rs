@@ -150,12 +150,12 @@ mod test {
         info!("{:?}", ft);
         assert_eq!(ft.ticker, "rollover3");
         let worker_data = packer
-            .generate_worker(&ft, GLOBAL_OPTS.primary_wallet.clone())
+            .generate_worker(&ft, GLOBAL_OPTS.primary_wallet.as_ref().unwrap().clone())
             .await
             .unwrap();
         info!("{:?}", worker_data);
 
-        let funding_wallet = &GLOBAL_OPTS.funding_wallet.p2tr_address(&worker_data.secp);
+        let funding_wallet = &GLOBAL_OPTS.funding_wallet.as_ref().unwrap().p2tr_address(&worker_data.secp);
         let utxo = electrumx
             .wait_until_utxo(funding_wallet.to_string(), worker_data.satsbyte)
             .await;
