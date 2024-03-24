@@ -1,3 +1,5 @@
+<div align="center">
+
 # Collider
 
 A collider for the Atomicals protocol.
@@ -5,6 +7,9 @@ A collider for the Atomicals protocol.
 [![License](https://img.shields.io/badge/license-AGPL-blue.svg)](https://www.gnu.org/licenses/agpl-3.0.html)
 
 ![Mine](./static/mining.png)
+Mine the Infinity (888888888.14) within 3 minutes (Lucky)
+</div>
+
 ## Features
 
 - Customizable verbosity level for detailed logging
@@ -57,28 +62,29 @@ To run the Collider, use the following command:
 ./collider [OPTIONS]
 ```
 
-#### Command-line Options
+#### Usage
+```shell
+Collier 0.1.0
+A collier for atomicals.
 
-- `-v`, `--verbose`: Sets the level of verbosity for logging.
-- `-a`, `--api-url <URL>`: Specifies the API URL to connect to.
-- `--testnet`: Runs the Collider in testnet mode.
-- `-b`, `--base-fee <FEE>`: Sets the base fee for transactions (default: 50).
-- `-p`, `--primary-wallet <WALLET>`: Specifies the primary wallet address.
-- `-f`, `--funding-wallet <WALLET>`: Specifies the funding wallet private key in WIF format.
-- `-t`, `--ticker <TICKER>`: Sets the ticker symbol for the collider.
-- `-m`, `--miner <MINER>`: Specifies the mining algorithm to use (default: "cpu").
+USAGE:
+    collider [FLAGS] [OPTIONS] --funding-wallet <funding-wallet> --primary-wallet <primary-wallet> --ticker <ticker>
 
-#### Environment Variables
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+    -v, --verbose    Sets the level of verbosity
 
-Instead of passing command-line options, you can also set the following environment variables:
+OPTIONS:
+    -a, --api-url <api-url>                   [env: API_URL=]
+    -b, --base-fee <base-fee>                 [env: BASE_FEE=]  [default: 50]
+    -f, --funding-wallet <funding-wallet>     [env: FUNDING_WALLET=]
+    -m, --miner <miner>                       [env: MINER=]  [default: cpu]
+    -p, --primary-wallet <primary-wallet>     [env: PRIMARY_WALLET=]
+        --testnet <testnet>                   [env: TESTNET=]
+    -t, --ticker <ticker>                     [env: TICKER=]
 
-- `API_URL`: Equivalent to `--api-url`.
-- `TESTNET`: Equivalent to `--testnet`, if you dont set this variable, the collider will run in mainnet mode.
-- `BASE_FEE`: Equivalent to `--base-fee`.
-- `PRIMARY_WALLET`: Equivalent to `--primary-wallet`.
-- `FUNDING_WALLET`: Equivalent to `--funding-wallet`.
-- `TICKER`: Equivalent to `--ticker`.
-- `MINER`: Equivalent to `--miner`.
+```
 
 You can set these environment variables in a `.env` file in the project root directory. The Collider will automatically load the variables from this file.
 
