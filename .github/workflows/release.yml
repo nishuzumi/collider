@@ -37,7 +37,7 @@ jobs:
         if: matrix.target.os == 'windows-latest'
         id: cuda-toolkit
         with:
-          cuda: '12.4.0'
+          cuda: '12.3.2'
           method: "network"
           sub-packages: '["nvcc","opencl"]'
       - name: Set RUSTFLAGS (Windows)
