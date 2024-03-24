@@ -113,6 +113,17 @@ GPU Name: Apple M3 Max (OpenCL Version: 1.2)
 | GPU    | 462.07M/s              | 604.54M/s              |
 +--------+------------------------+------------------------+
 ```
+```
+CPU Name: AMD Ryzen 7 7800X3D 8-Core Processor
+GPU Name: NVIDIA GeForce RTX 4090 (OpenCL Version: 3.0)
++--------+------------------------+------------------------+
+| Device | Commit Hash Rate (M/s) | Reveal Hash Rate (M/s) |
++--------+------------------------+------------------------+
+| CPU    | 69.96M/s               | 97.92M/s               |
++--------+------------------------+------------------------+
+| GPU    | 1.16B/s                | 1.49B/s                |
++--------+------------------------+------------------------+
+```
 
 You can test your device by running the following command:
 ```shell
