@@ -43,15 +43,14 @@ jobs:
         run: echo "RUSTFLAGS=-L ${{ steps.cuda-toolkit.outputs.CUDA_PATH }}/lib/x64" >> $GITHUB_ENV
       - name: Build
         run: cargo build --profile ci-release --locked --target ${{ matrix.target.name }}
-      - name: Compress
+      - name: Prepare artifact
         run: |
-          mv target/${{ matrix.target.name }}/ci-release/collider${{ matrix.target.extension }} .
-          zstd --ultra -22 -o collider-${{ matrix.target.name }}.zst collider${{ matrix.target.extension }}
+          cp target/${{ matrix.target.name }}/ci-release/collider${{ matrix.target.extension }} collider-${{ matrix.target.name }}${{ matrix.target.extension }}
       - name: Upload artifact
         uses: actions/upload-artifact@v4.3.1
         with:
-          name: collider-${{ matrix.target.name }}
-          path: collider-${{ matrix.target.name }}.zst
+          name: collider-${{ matrix.target.name }}${{ matrix.target.extension }}
+          path: collider-${{ matrix.target.name }}${{ matrix.target.extension }}
           retention-days: 1
 
   staging:
