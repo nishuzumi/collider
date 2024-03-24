@@ -2,6 +2,9 @@
 
 A collider for the Atomicals protocol.
 
+[![License](https://img.shields.io/badge/license-AGPL-blue.svg)](https://www.gnu.org/licenses/agpl-3.0.html)
+
+![Mine](./static/mining.png)
 ## Features
 
 - Customizable verbosity level for detailed logging
