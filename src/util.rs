@@ -213,6 +213,7 @@ pub fn get_cpu_desc() -> String {
 
 #[cfg(target_os = "linux")]
 pub fn get_cpu_desc() -> String {
+    use std::io::{BufRead, BufReader};
     let file = std::fs::File::open("/proc/cpuinfo").expect("Could not open /proc/cpuinfo");
     let reader = std::io::BufReader::new(file);
 
@@ -231,7 +232,7 @@ pub fn get_cpu_desc() -> String {
 #[cfg(target_os = "windows")]
 pub fn get_cpu_desc() -> String {
     let output = Command::new("wmic")
-        .args(&["cpu", "get", "name"])
+        .args(["cpu", "get", "name"])
         .output()
         .expect("failed to execute process");
 
