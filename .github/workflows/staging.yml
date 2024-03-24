@@ -1,0 +1,72 @@
+name: Staging
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.target.name }} package
+    runs-on: ${{ matrix.target.os }}
+    strategy:
+      matrix:
+        target:
+          [
+            { name: x86_64-unknown-linux-gnu, os: ubuntu-latest },
+            { name: aarch64-apple-darwin, os: macos-latest },
+            {
+              name: x86_64-pc-windows-msvc,
+              os: windows-latest,
+              extension: .exe,
+            },
+          ]
+    steps:
+      - name: Fetch latest code
+        uses: actions/checkout@v4
+      - name: Setup Rust toolchain
+        run: rustup target add ${{ matrix.target.name }}
+      - name: Install OpenCL (Linux)
+        if: matrix.target.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt install opencl-headers ocl-icd-opencl-dev -y
+      - uses: Jimver/cuda-toolkit@v0.2.14
+        if: matrix.target.os == 'windows-latest'
+        id: cuda-toolkit
+        with:
+          cuda: '12.4'
+          method: "network"
+          sub-packages: '["nvcc","opencl"]'
+      - name: Set RUSTFLAGS (Windows)
+        if: matrix.target.os == 'windows-latest'
+        run: echo "RUSTFLAGS=-L ${{ steps.cuda-toolkit.outputs.CUDA_PATH }}/lib/x64" >> $GITHUB_ENV
+      - name: Build
+        run: cargo build --profile ci-release --locked --target ${{ matrix.target.name }}
+      - name: Compress
+        run: |
+          mv target/${{ matrix.target.name }}/ci-release/collider${{ matrix.target.extension }} .
+          zstd --ultra -22 -o collider-${{ matrix.target.name }}.zst collider${{ matrix.target.extension }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: collider-${{ matrix.target.name }}
+          path: collider-${{ matrix.target.name }}.zst
+          retention-days: 1
+
+  staging:
+    name: Staging
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+      - name: Hash
+        run: |
+          mkdir -p artifacts
+          mv collider-*/* artifacts/
+          cd artifacts
+          sha256sum * | tee ../SHA256
+          md5sum * | tee ../MD5
+          mv ../SHA256 .
+          mv ../MD5 .
