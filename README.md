@@ -5,7 +5,10 @@
 A collider for the Atomicals protocol.
 
 [![License](https://img.shields.io/badge/license-AGPL-blue.svg)](https://www.gnu.org/licenses/agpl-3.0.html)
-
+[![Release](https://github.com/nishuzumi/collider/actions/workflows/release.yml/badge.svg)](https://github.com/nishuzumi/collider/actions/workflows/release.yml)
+[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/nishuzumi/collider)](https://github.com/nishuzumi/collider/tags)
+[![GitHub code lines](https://tokei.rs/b1/github/nishuzumi/collider)](https://github.com/nishuzumi/collider)
+[![GitHub last commit](https://img.shields.io/github/last-commit/nishuzumi/collider?color=red&style=plastic)](https://github.com/nishuzumi/collider)
 ![Mine](./static/mining.png)
 Mine the Infinity (888888888.14) within 3 minutes (Lucky)
 </div>
