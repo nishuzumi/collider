@@ -1,20 +1,23 @@
 [package]
 name = "collider"
 version = "0.1.2"
+build = "build.rs"
 authors = ["BoxMrChen <boxmrchen@fastmail.com>"]
-readme      = "README.md"
-repository  = "https://github.com/nishuzumi/collider"
+readme = "README.md"
+repository = "https://github.com/nishuzumi/collider"
 edition = "2021"
+license = "AGPL-3"
 
 [workspace]
 members = ['atomicals-electrumx']
 
-[[bin]]
-name = "collider"
-path = "src/main.rs"
+[build-dependencies]
+# crates.io
+vergen = { version = "8.3", features = ["build", "cargo", "git", "gitcl"] }
 
 [dependencies]
-atomicals-electrumx = {version = "0.2.1", path = 'atomicals-electrumx' }
+# crates.io
+atomicals-electrumx = { version = "0.2.1", path = 'atomicals-electrumx' }
 bitcoin = "0.31.1"
 eyre = "0.6.12"
 tokio = { version = "1.35", features = ["macros", "rt-multi-thread"] }
@@ -32,6 +35,6 @@ rayon = "1.9.0"
 dotenvy = "0.15.7"
 hex = "0.4.3"
 log = "0.4.21"
-indicatif = { version = "0.17.8",features = ["improved_unicode"] }
+indicatif = { version = "0.17.8", features = ["improved_unicode"] }
 ocl = { version = "0.19.6" }
-colored = "2.0.0"
+colored = "2.1.0"
