@@ -39,7 +39,7 @@ jobs:
         with:
           cuda: '12.4'
           method: "network"
-          sub-packages: "nvcc,opencl"
+          sub-packages: '["nvcc","opencl"]'
       - name: Set RUSTFLAGS (Windows)
         if: matrix.target.os == 'windows-latest'
         run: echo "RUSTFLAGS=-L ${{ steps.cuda-toolkit.outputs.CUDA_PATH }}/lib/x64" >> $GITHUB_ENV
