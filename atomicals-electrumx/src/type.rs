@@ -89,10 +89,12 @@ impl fmt::Display for Ft {
         write!(f,
 r#"
     Ft Into
+        Ticker: {}
         Max mints: {}
         Max supply: {}
         Mint amount: {}
 "#,
+            self.ticker,
             self.max_mints,
             self.max_supply,
             self.mint_amount,
@@ -102,6 +104,9 @@ r#"
         }
         if let Some(bitworkr) = &self.mint_bitworkr {
             writeln!(f, "    Mint bitworkR: {}", bitworkr)?;
+        }
+        if let Some(bitworkc) = &self.dft_info.mint_bitworkc_current{
+            writeln!(f, "    Mint bitworkC current: {}", bitworkc)?;
         }
         Ok(())
         
