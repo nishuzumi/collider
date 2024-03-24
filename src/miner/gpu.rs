@@ -115,7 +115,7 @@ pub fn find_seq_by_gpu(
     let pos = find_first_sequence_position(data) as u32;
 
     let (pro_que, data_buffer, params_buffer, bit_work_buffer) =
-      generate_pro_que_params(data, target, pos);
+        generate_pro_que_params(data, target, pos);
 
     let mut output = vec![HashResult::default()];
     let output_buf = Buffer::<HashResult>::builder()
@@ -271,12 +271,16 @@ pub fn generate_pro_que_params(
 
 #[cfg(test)]
 mod tests {
+    use std::ffi::CString;
     use std::hash::Hash;
     use std::sync::atomic::Ordering;
     use std::time::Instant;
 
     use bitcoin::consensus::{deserialize, Encodable};
     use bitcoin::secp256k1;
+    use ocl::core;
+    use ocl::core::ClVersions;
+    use ocl::core::DeviceInfo::Platform;
     use tracing::info;
 
     use crate::miner::cpu::CpuMiner;
@@ -338,5 +342,40 @@ mod tests {
         tx.consensus_encode(&mut serialize).unwrap();
         info!("reveal: {:?}", hex::encode(serialize));
         info!("txid:{}", tx.txid());
+    }
+
+    #[test]
+    fn test_gpu_version() {
+        let src = r#"
+        __kernel void add(__global float* buffer, float scalar) {
+            buffer[get_global_id(0)] += scalar;
+        }
+    "#;
+
+        let platform_id = core::default_platform().unwrap();
+        let device_ids = core::get_device_ids(&platform_id, None, None).unwrap();
+        let device_id = device_ids[0];
+        let context_properties = core::ContextProperties::new().platform(platform_id);
+        let context =
+            core::create_context(Some(&context_properties), &[device_id], None, None).unwrap();
+        let src_cstring = CString::new(src).unwrap();
+        let program = core::create_program_with_source(&context, &[src_cstring]).unwrap();
+        core::build_program(
+            &program,
+            None::<&[()]>,
+            &CString::new("").unwrap(),
+            None,
+            None,
+        )
+        .unwrap();
+
+        let dv0 = core::get_device_info(&device_id, core::DeviceInfo::Version).unwrap();
+        println!("Pre-Parse: 'DeviceInfo::Version': {}", dv0);
+
+        let dv1 = device_id.device_versions().unwrap();
+        println!(
+            "Parsed: 'core::get_device_version()': {}",
+            dv1.first().unwrap()
+        );
     }
 }
