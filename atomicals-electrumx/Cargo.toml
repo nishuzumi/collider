@@ -1,12 +1,12 @@
 [package]
-authors     = ["Xavier Lau <xavier@inv.cafe>"]
+authors     = ["Xavier Lau <xavier@inv.cafe>","BoxMrChen <boxmrchen@fastmail.com>"]
 description = "Atomicals electrumx APIs."
 edition     = "2021"
 homepage    = "https://hack.ink/atomicalsir"
 license     = "GPL-3.0"
 name        = "atomicals-electrumx"
 repository  = "https://github.com/hack-ink/atomicalsir"
-version     = "0.2.0"
+version     = "0.2.1"
 
 [dependencies]
 # crates.io
