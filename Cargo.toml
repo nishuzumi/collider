@@ -1,6 +1,7 @@
 [package]
 name = "collider"
 version = "0.1.0"
+authors = ["BoxMrChen"]
 readme      = "README.md"
 repository  = "https://github.com/nishuzumi/collider"
 edition = "2021"
