@@ -144,7 +144,7 @@ This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE.
 
 [Atomicals](https://atomicals.xyz/) - The Atomicals protocol
 
-Atomicalsir - For providing the foundation and inspiration for this project
+[Atomicalsir](https://github.com/hack-ink/atomicalsir) - For providing the foundation and inspiration for this project
 
 ## Contact
 
