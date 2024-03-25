@@ -17,7 +17,7 @@ use serde::Serialize;
 use structopt::StructOpt;
 
 #[derive(Clone, Debug, StructOpt)]
-#[structopt(name = "Collier", about = "A collier for atomicals.")]
+#[structopt(name = "Collider", about = "A collider for atomicals.")]
 pub struct Opt {
     #[structopt(long)]
     pub benchmark: bool,

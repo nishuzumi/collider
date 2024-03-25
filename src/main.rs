@@ -56,19 +56,17 @@ async fn main() {
 
         subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     };
+    println!("{}","
+ 
+ 
+             ██████╗ ██████╗ ██╗     ██╗     ⚛️╗██████╗ ███████╗██████╗ 
+            ██╔════╝██╔═══██╗██║     ██║     ██║██╔══██╗██╔════╝██╔══██╗
+            ██║     ██║   ██║██║     ██║     ██║██║  ██║█████╗  ██████╔╝
+            ██║     ██║   ██║██║     ██║     ██║██║  ██║██╔══╝  ██╔══██╗
+            ╚██████╗╚██████╔╝███████╗███████╗██║██████╔╝███████╗██║  ██║
+             ╚═════╝ ╚═════╝ ╚══════╝╚══════╝╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝"
+      .bright_red());
 
-    println!(
-        "{}",
-        "
-
-             ██████╗ ██████╗ ██╗     ██╗     ⚛️╗███████╗██████╗ 
-            ██╔════╝██╔═══██╗██║     ██║     ██║██╔════╝██╔══██╗
-            ██║     ██║   ██║██║     ██║     ██║█████╗  ██████╔╝
-            ██║     ██║   ██║██║     ██║     ██║██╔══╝  ██╔══██╗
-            ╚██████╗╚██████╔╝███████╗███████╗██║███████╗██║  ██║
-             ╚═════╝ ╚═════╝ ╚══════╝╚══════╝╚═╝╚══════╝╚═╝  ╚═╝"
-            .bright_red()
-    );
     let twitter = "Author: @BoxMrChen https://x.com/BoxMrChen".blue();
     let boxchen = "@BoxMrChen".yellow();
     println!(
@@ -88,7 +86,7 @@ async fn main() {
         info!("Running collider benchmark...");
         collider_benchmark();
     } else {
-        info!("Starting collier...");
+        info!("Starting collider...");
         mint().await;
     }
 }

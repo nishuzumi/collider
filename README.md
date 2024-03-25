@@ -5,11 +5,17 @@ A High-Performance, Open-Source FT Mint Tool for the Atomicals Protocol
 
 ***Make Atomicals Great Again***
 
-Collier is a fast and efficient FT (Fungible Token) Mint tool designed for the Atomicals protocol. It harnesses the power of GPU parallel computing to significantly boost the computational performance of the FT Mint process.
+[![License](https://img.shields.io/badge/license-AGPL-blue.svg)](https://www.gnu.org/licenses/agpl-3.0.html)
+[![Release](https://github.com/nishuzumi/collider/actions/workflows/release.yml/badge.svg)](https://github.com/nishuzumi/collider/actions/workflows/release.yml)
+[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/nishuzumi/collider)](https://github.com/nishuzumi/collider/tags)
+[![GitHub code lines](https://tokei.rs/b1/github/nishuzumi/collider)](https://github.com/nishuzumi/collider)
+[![GitHub last commit](https://img.shields.io/github/last-commit/nishuzumi/collider?color=red&style=plastic)](https://github.com/nishuzumi/collider)
 
-In the past, we have seen many FT Mint tools being monopolized by a few individuals or organizations, which is detrimental to the healthy development of the Atomicals ecosystem. To promote the prosperity of the Atomicals community, we have created Collier as an open-source project.
+Collider is a fast and efficient FT (Fungible Token) Mint tool designed for the Atomicals protocol. It harnesses the power of GPU parallel computing to significantly boost the computational performance of the FT Mint process.
 
-By open-sourcing Collier, we aim to:
+In the past, we have seen many FT Mint tools being monopolized by a few individuals or organizations, which is detrimental to the healthy development of the Atomicals ecosystem. To promote the prosperity of the Atomicals community, we have created Collider as an open-source project.
+
+By open-sourcing Collider, we aim to:
 
 Provide a high-performance FT Mint tool that benefits all users of the Atomicals protocol.
 
@@ -17,15 +23,10 @@ Foster openness and inclusivity within the Atomicals community, preventing tool 
 
 Encourage more developers to participate in building the Atomicals ecosystem, driving its growth together.
 
-Continuously optimize and enhance Collier through the power of the community, making it the standard FT Mint tool for the Atomicals protocol.
+Continuously optimize and enhance Collider through the power of the community, making it the standard FT Mint tool for the Atomicals protocol.
 
-We sincerely invite everyone interested in the Atomicals protocol to join the Collier project. Whether you are a developer, designer, or general user, your contributions will be invaluable. Let us work hand in hand to strive for a brighter future for Atomicals!
+We sincerely invite everyone interested in the Atomicals protocol to join the Collider project. Whether you are a developer, designer, or general user, your contributions will be invaluable. Let us work hand in hand to strive for a brighter future for Atomicals!
 
-[![License](https://img.shields.io/badge/license-AGPL-blue.svg)](https://www.gnu.org/licenses/agpl-3.0.html)
-[![Release](https://github.com/nishuzumi/collider/actions/workflows/release.yml/badge.svg)](https://github.com/nishuzumi/collider/actions/workflows/release.yml)
-[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/nishuzumi/collider)](https://github.com/nishuzumi/collider/tags)
-[![GitHub code lines](https://tokei.rs/b1/github/nishuzumi/collider)](https://github.com/nishuzumi/collider)
-[![GitHub last commit](https://img.shields.io/github/last-commit/nishuzumi/collider?color=red&style=plastic)](https://github.com/nishuzumi/collider)
 ![Mine](./static/mining.png)
 Mine the Infinity (888888888.14) within 3 minutes (Lucky)
 </div>
@@ -84,8 +85,8 @@ To run the Collider, use the following command:
 
 #### Usage
 ```shell
-Collier 0.1.0
-A collier for atomicals.
+Collider 0.1.0
+A collider for atomicals.
 
 USAGE:
     collider [FLAGS] [OPTIONS] --funding-wallet <funding-wallet> --primary-wallet <primary-wallet> --ticker <ticker>
@@ -154,7 +155,7 @@ You can test your device by running the following command:
 Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
 
 ## Roadmap
-[] Add multi task feature - it will allow user use one utxo to mint 100 times in less gas and time.
+[] Add multi mint feature - it will allow user use one utxo to mint 100 times in less gas and time.
 
 [] Improve the performance - The high performance version is currently closed source, if you are interested you can contact me.
 
