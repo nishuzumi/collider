@@ -153,6 +153,13 @@ You can test your device by running the following command:
 
 Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
 
+## Roadmap
+[] Add multi task feature - it will allow user use one utxo to mint 100 times in less gas and time.
+
+[] Improve the performance - The high performance version is currently closed source, if you are interested you can contact me.
+
+[] Add pure mode - By using public rpc for higher speed calculations, pure mode will not recognize any assets of the funding wallet.
+
 ## License
 
 This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE.
