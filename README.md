@@ -10,7 +10,10 @@ A High-Performance, Open-Source FT Mint Tool for the Atomicals Protocol
 [![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/nishuzumi/collider)](https://github.com/nishuzumi/collider/tags)
 [![GitHub code lines](https://tokei.rs/b1/github/nishuzumi/collider)](https://github.com/nishuzumi/collider)
 [![GitHub last commit](https://img.shields.io/github/last-commit/nishuzumi/collider?color=red&style=plastic)](https://github.com/nishuzumi/collider)
+
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/collider_atomicals)
+
+
 Collider is a fast and efficient FT (Fungible Token) Mint tool designed for the Atomicals protocol. It harnesses the power of GPU parallel computing to significantly boost the computational performance of the FT Mint process.
 
 In the past, we have seen many FT Mint tools being monopolized by a few individuals or organizations, which is detrimental to the healthy development of the Atomicals ecosystem. To promote the prosperity of the Atomicals community, we have created Collider as an open-source project.
