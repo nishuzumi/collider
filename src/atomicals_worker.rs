@@ -27,13 +27,13 @@ use crate::util;
 use crate::util::{format_speed, GLOBAL_OPTS, tx2bytes};
 
 #[derive(Debug, Clone)]
-struct PayloadScript {
+pub struct PayloadScript {
     // payload: PayloadWrapper,
     // payload_encoded: Vec<u8>,
     funding_spk: ScriptBuf,
     reveal_script: ScriptBuf,
     reveal_spend_info: TaprootSpendInfo,
-    fees: Fees,
+    pub fees: Fees,
     reveal_spk: ScriptBuf,
 }
 
@@ -78,7 +78,7 @@ impl AtomicalsWorker {
     }
     /// Generate the payload script
     /// The payload script is the script that will be used in the reveal tx
-    fn generate_payload_script(&self, ticker_data: &TickerData) -> Result<PayloadScript> {
+    pub fn generate_payload_script(&self, ticker_data: &TickerData) -> Result<PayloadScript> {
         let TickerData {
             secp,
             satsbyte,

@@ -15,7 +15,7 @@ use tracing_subscriber::fmt::format::Format;
 use atomicals_electrumx::{Api, ElectrumXBuilder};
 use atomicals_packer::AtomicalsPacker;
 
-use crate::atomicals_worker::AtomicalsWorker;
+use crate::atomicals_worker::{AtomicalsWorker, PayloadScript};
 use crate::miner::{create_miner, Miner};
 use crate::miner::cpu::CpuMiner;
 use crate::miner::gpu::GpuMiner;
@@ -56,7 +56,9 @@ async fn main() {
 
         subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     };
-    println!("{}","
+    println!(
+        "{}",
+        "
  
  
              ██████╗ ██████╗ ██╗     ██╗     ⚛️╗██████╗ ███████╗██████╗ 
@@ -65,7 +67,8 @@ async fn main() {
             ██║     ██║   ██║██║     ██║     ██║██║  ██║██╔══╝  ██╔══██╗
             ╚██████╗╚██████╔╝███████╗███████╗██║██████╔╝███████╗██║  ██║
              ╚═════╝ ╚═════╝ ╚══════╝╚══════╝╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝"
-      .bright_red());
+            .bright_red()
+    );
 
     let twitter = "Author: @BoxMrChen https://x.com/BoxMrChen".blue();
     let boxchen = "@BoxMrChen".yellow();
@@ -93,7 +96,7 @@ async fn main() {
 
 fn collider_benchmark() {
     info!("{}", "Benchmarking, will take a few minutes...".yellow());
-    
+
     let commit_tx = "01000000012a912f654cc1bd88da5b8a54c52b6dd60b6e831bfba52b32c1314cd17c5634120100000000feffffff024c05000000000000225120e3d5a4789dc4982cfda563c8c23f988f505e481bf9602f7ba5b1045e44e0392000b09a3b0000000022512032447fe28750a7e2b18af49d89a359a81c69bbf6f3db05feb7e8e1688f37e4c200000000";
     let commit_tx = hex::decode(commit_tx).unwrap();
 
@@ -144,7 +147,7 @@ fn collider_benchmark() {
     println!("CPU Name: {}", get_cpu_desc());
     let platform = Platform::default();
     let devices = Device::list_all(platform).unwrap();
-    
+
     for device in devices.iter() {
         println!(
             "GPU Name: {} (OpenCL Version: {})",
@@ -199,11 +202,6 @@ async fn mint() {
         .expect("generate worker error");
 
     let funding_wallet = opts.funding_wallet.as_ref().unwrap().p2tr_address(&secp);
-    let utxo = electrumx
-        .wait_until_utxo(funding_wallet.to_string(), worker_data.satsbyte)
-        .await
-        .expect("wait until utxo error");
-
     let miner = create_miner();
 
     let worker = AtomicalsWorker::new(
@@ -211,6 +209,16 @@ async fn mint() {
         miner,
     );
 
+    // Generate fake payload script for fee
+    let PayloadScript { fees, .. } = worker
+        .generate_payload_script(&worker_data)
+        .expect("Cannot generate payload script");
+
+    let utxo = electrumx
+        .wait_until_utxo(funding_wallet.to_string(),fees.commit_and_reveal_and_outputs)
+        .await
+        .expect("wait until utxo error");
+    
     let commit_result = worker
         .build_commit_tx(&worker_data, utxo)
         .expect("build commit tx error");

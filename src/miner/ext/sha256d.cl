@@ -357,20 +357,6 @@ def_hash(hash_priv_to_glbl, __private, __global)
 #undef mod
 #undef shr32
 #undef rotl32
-// __kernel void hash_main(__global const inbuf * inbuffer, __global outbuf * outbuffer)
-// {
-//     unsigned int idx = get_global_id(0);
-//     // unsigned int hash[32/4]={0};
-//     hash_global(inbuffer[idx].buffer, inbuffer[idx].length, outbuffer[idx].buffer);
-// /*     outbuffer[idx].buffer[0]=hash[0];
-//     outbuffer[idx].buffer[1]=hash[1];
-//     outbuffer[idx].buffer[2]=hash[2];
-//     outbuffer[idx].buffer[3]=hash[3];
-//     outbuffer[idx].buffer[4]=hash[4];
-//     outbuffer[idx].buffer[5]=hash[5];
-//     outbuffer[idx].buffer[6]=hash[6];
-//     outbuffer[idx].buffer[7]=hash[7]; */
-// }
 
 typedef struct {
   int found;
@@ -403,20 +389,16 @@ __kernel void sha256d(
     uint header_length = params->data_len;
     uint pos = params->pos;
 
-    // 复制 header 到 tempHdr
     for (uint x = 0; x < pos; x++) {
         tempHdr[x] = header[x];
     }
 
-    // 在特定位置插入工作项 ID
     uint id = get_global_id(0);
-    // printf("id:%u\n",id);
     tempHdr[pos + 3] = (id >> 24) & 0xFF;
     tempHdr[pos + 2] = (id >> 16) & 0xFF;
     tempHdr[pos + 1] = (id >> 8) & 0xFF;
     tempHdr[pos + 0] = id & 0xFF;
 
-    // 复制剩余的 header 数据
     for (uint x = pos + 4; x < header_length; x++) {
         tempHdr[x] = header[x];
     }
@@ -431,7 +413,6 @@ __kernel void sha256d(
         }
     }
 
-    // 扩展位检查
     if (bw->ext) {
         uint8_t ext_pos = bw->ext_pos;
         uint8_t ext_value = bw->ext_value;
@@ -440,7 +421,6 @@ __kernel void sha256d(
         }
     }
     
-    // 有效
     uint index = atomic_add(&output_buffer->found,1);
     output_buffer->results[index] = id;
 }
@@ -457,12 +437,10 @@ __kernel void sha256d_64(
     uint header_length = params->data_len;
     uint pos = params->pos;
 
-    // 复制 header 到 tempHdr
     for (uint x = 0; x < pos; x++) {
         tempHdr[x] = header[x];
     }
 
-    // 在特定位置插入工作项 ID
     ulong id = get_global_id(0);
     
     tempHdr[pos + 7] = (id >> 56) & 0xFF;
@@ -474,7 +452,6 @@ __kernel void sha256d_64(
     tempHdr[pos + 1] = (id >> 8) & 0xFF;
     tempHdr[pos + 0] = id & 0xFF;
 
-    // 复制剩余的 header 数据
     for (uint x = pos + 8; x < header_length; x++) {
         tempHdr[x] = header[x];
     }
@@ -489,7 +466,6 @@ __kernel void sha256d_64(
         }
     }
 
-    // 扩展位检查
     if (bw->ext) {
         uint8_t ext_pos = bw->ext_pos;
         uint8_t ext_value = bw->ext_value;
@@ -498,7 +474,6 @@ __kernel void sha256d_64(
         }
     }
     
-    // 有效
     uint index = atomic_add(&output_buffer->found,1);
     output_buffer->results[index] = id;
 }

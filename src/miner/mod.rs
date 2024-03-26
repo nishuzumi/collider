@@ -9,6 +9,8 @@ use crate::utils::bitworkc::BitWork;
 
 pub mod cpu;
 pub mod gpu;
+#[cfg(feature = "op_sha256")]
+pub mod op_sha256_gpu; 
 
 pub trait Miner {
     fn name(&self) -> &'static str;
