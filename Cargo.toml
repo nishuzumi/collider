@@ -47,6 +47,9 @@ indicatif = { version = "0.17.8", features = ["improved_unicode"] }
 ocl = { version = "0.19.6" }
 colored = "2.1.0"
 prettytable-rs = "0.10.0"
+reqwest = "0.11.27"
+toml = "0.8.12"
+semver = "1.0.22"
 
 [features]
 default = []

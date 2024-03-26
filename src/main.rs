@@ -7,9 +7,10 @@ use bitcoin::consensus::encode;
 use bitcoin::key::Secp256k1;
 use bitcoin::Network;
 use colored::*;
+use eyre::{eyre, Result};
 use ocl::{Device, Platform};
 use prettytable::{Cell, Row, Table};
-use tracing::{info, subscriber};
+use tracing::{info, subscriber, warn};
 use tracing_subscriber::fmt::format::Format;
 
 use atomicals_electrumx::{Api, ElectrumXBuilder};
@@ -35,6 +36,7 @@ compile_error!("This program requires a 64-bit architecture.");
 async fn main() {
     dotenvy::dotenv().ok();
 
+    let version = env!("CARGO_PKG_VERSION");
     let opts = GLOBAL_OPTS.clone();
 
     if GLOBAL_OPTS.verbose {
@@ -56,6 +58,9 @@ async fn main() {
 
         subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     };
+
+    let latest_version = get_latest_version().await.unwrap_or(version.to_owned());
+
     println!(
         "{}",
         "
@@ -77,9 +82,21 @@ async fn main() {
             Made with ❤️ by {boxchen}, @atomicalsir, @atomicals               
                 {twitter}
                Github: https://github.com/nishuzumi/collider
+               Miner Version: {version}, Latest Version: {latest_version}
 
 "#
     );
+
+    let v1 = semver::Version::parse(version).unwrap();
+    let v2 = semver::Version::parse(&latest_version).unwrap();
+
+    if v1 < v2 {
+        warn!("Please download the latest version, https://github.com/nishuzumi/collider/releases/latest");
+        
+        if v1.major < v2.major || (v1.major == v2.major && v1.minor < v2.minor) {
+            std::process::exit(0);
+        }
+    }
 
     if opts.verbose {
         tracing::debug!("Verbose mode is enabled");
@@ -91,6 +108,20 @@ async fn main() {
     } else {
         info!("Starting collider...");
         mint().await;
+    }
+}
+
+async fn get_latest_version() -> Result<String> {
+    let url = "https://raw.githubusercontent.com/nishuzumi/collider/main/Cargo.toml";
+    let response = reqwest::get(url).await?;
+    let cargo_toml_content = response.text().await?;
+
+    let cargo_toml: toml::Value = toml::from_str(&cargo_toml_content)?;
+
+    if let Some(version) = cargo_toml["package"]["version"].as_str() {
+        Ok(version.to_string())
+    } else {
+        Err(eyre!("Version not found in Cargo.toml"))
     }
 }
 
@@ -215,10 +246,13 @@ async fn mint() {
         .expect("Cannot generate payload script");
 
     let utxo = electrumx
-        .wait_until_utxo(funding_wallet.to_string(),fees.commit_and_reveal_and_outputs)
+        .wait_until_utxo(
+            funding_wallet.to_string(),
+            fees.commit_and_reveal_and_outputs,
+        )
         .await
         .expect("wait until utxo error");
-    
+
     let commit_result = worker
         .build_commit_tx(&worker_data, utxo)
         .expect("build commit tx error");
