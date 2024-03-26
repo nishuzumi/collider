@@ -1,6 +1,6 @@
 [package]
 name = "collider"
-version = "0.2.6"
+version = "0.2.7"
 build = "build.rs"
 authors = ["BoxMrChen <boxmrchen@fastmail.com>"]
 readme = "README.md"
