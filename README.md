@@ -85,27 +85,29 @@ To run the Collider, use the following command:
 
 #### Usage
 ```shell
-Collider 0.1.0
+Collider 0.2.8
 A collider for atomicals.
 
 USAGE:
-    collider [FLAGS] [OPTIONS] --funding-wallet <funding-wallet> --primary-wallet <primary-wallet> --ticker <ticker>
+    collider [FLAGS] [OPTIONS] --funding-wallet <funding-wallet> --miner <miner> --primary-wallet <primary-wallet>
 
 FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-    -v, --verbose    Sets the level of verbosity
+        --benchmark    
+    -h, --help         Prints help information
+    -V, --version      Prints version information
+    -v, --verbose      Sets the level of verbosity
 
 OPTIONS:
     -a, --api-url <api-url>                   [env: API_URL=]
     -b, --base-fee <base-fee>                 [env: BASE_FEE=]  [default: 50]
     -f, --funding-wallet <funding-wallet>     [env: FUNDING_WALLET=]
-    -m, --miner <miner>                       [env: MINER=]  [default: cpu]
+    -m, --miner <miner>                       [env: MINER=]  [default: cpu]  [possible values: cpu, gpu]
     -p, --primary-wallet <primary-wallet>     [env: PRIMARY_WALLET=]
         --testnet <testnet>                   [env: TESTNET=]
     -t, --ticker <ticker>                     [env: TICKER=]
-
 ```
+
+**Do not use any wallet containing inscriptions or other assets as a funding wallet !!!!!**
 
 You can set these environment variables in a `.env` file in the project root directory. The Collider will automatically load the variables from this file.
 
