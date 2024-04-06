@@ -1,6 +1,6 @@
 [package]
 name = "collider"
-version = "0.2.8"
+version = "0.2.9"
 build = "build.rs"
 authors = ["BoxMrChen <boxmrchen@fastmail.com>"]
 readme = "README.md"
@@ -47,7 +47,7 @@ indicatif = { version = "0.17.8", features = ["improved_unicode"] }
 ocl = { version = "0.19.6" }
 colored = "2.1.0"
 prettytable-rs = "0.10.0"
-reqwest = "0.11.27"
+reqwest = "0.12.3"
 toml = "0.8.12"
 semver = "1.0.22"
 
