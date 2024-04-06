@@ -377,6 +377,50 @@ typedef struct {
     uint pos;
 } Params;
 
+__kernel void sha256d_append(
+  __global uchar *header,
+  __global const Params* params,
+  __global const BitWorkForGPU* bw,
+  __global resultBulk  *output_buffer
+) {
+    __private uint8_t tempHdr[255];
+    __private uint8_t tempDigest[32] = {0};
+
+    uint header_length = params->data_len;
+    uint pos = params->pos;
+
+    for (uint x = 0; x < header_length; x++) {
+        tempHdr[x] = header[x];
+    }
+
+    uint id = get_global_id(0);
+    tempHdr[header_length - 1] = (id >> 24) & 0xFF;
+    tempHdr[header_length - 2] = (id >> 16) & 0xFF;
+    tempHdr[header_length - 3] = (id >> 8) & 0xFF;
+    tempHdr[header_length - 4] = id & 0xFF;
+
+    hash_private(tempHdr,header_length,tempDigest);
+    
+    hash_private(tempDigest,32,tempDigest);
+
+    for (int i = 0; i < 32; i++) {
+        if ((tempDigest[i] & bw->mask[i]) != bw->pattern[i]) {
+            return;
+        }
+    }
+
+    if (bw->ext) {
+        uint8_t ext_pos = bw->ext_pos;
+        uint8_t ext_value = bw->ext_value;
+        if (tempDigest[31 - ext_pos] < ext_value) {
+            return;
+        }
+    }
+    
+    uint index = atomic_add(&output_buffer->found,1);
+    output_buffer->results[index] = id;
+}
+
 __kernel void sha256d(
   __global uchar *header,
   __global const Params* params,
@@ -429,6 +473,7 @@ __kernel void sha256d_64(
   __global uchar *header,
   __global const Params* params,
   __global const BitWorkForGPU* bw,
+  ulong offset,
   __global resultBulk  *output_buffer
 ) {
     __private uint8_t tempHdr[255];
@@ -441,7 +486,7 @@ __kernel void sha256d_64(
         tempHdr[x] = header[x];
     }
 
-    ulong id = get_global_id(0);
+    ulong id = get_global_id(0) + offset;
     
     tempHdr[pos + 7] = (id >> 56) & 0xFF;
     tempHdr[pos + 6] = (id >> 48) & 0xFF;
@@ -475,5 +520,5 @@ __kernel void sha256d_64(
     }
     
     uint index = atomic_add(&output_buffer->found,1);
-    output_buffer->results[index] = id;
+    output_buffer->results[index] = get_global_id(0);
 }

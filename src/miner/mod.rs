@@ -15,22 +15,22 @@ pub mod op_sha256_gpu;
 pub trait Miner {
     fn name(&self) -> &'static str;
     fn mine_commit(
-        &self,
+        &mut self,
         tx: &[u8],
         bitworkc: BitWork,
         start: u32,
         max: Option<u32>,
-    ) -> Option<u32>;
+    ) -> Vec<u8>;
 
     fn mine_commit_counter(&self) -> Arc<AtomicU64>;
 
     fn mine_reveal(
-        &self,
+        &mut self,
         tx: &[u8],
         bitworkr: BitWork,
         start: u64,
         max: Option<u64>,
-    ) -> Option<u64>;
+    ) -> Vec<u8>;
 
     fn mine_reveal_counter(&self) -> Arc<AtomicU64>;
 }
@@ -153,23 +153,46 @@ impl Iterator for StepByIterator {
 }
 #[cfg(test)]
 mod tests {
+    use std::sync::atomic::Ordering::SeqCst;
+    use std::time::Instant;
+
+    use bitcoin::consensus::deserialize;
     use tracing::info;
 
-    use crate::util::log;
+    use crate::miner::Miner;
+    use crate::utils::bitworkc::BitWork;
 
-    use super::*;
+    pub fn mint_commit_by(miner:&mut impl Miner){
+        let tx = "01000000012a912f654cc1bd88da5b8a54c52b6dd60b6e831bfba52b32c1314cd17c5634120100000000feffffff024c05000000000000225120e3d5a4789dc4982cfda563c8c23f988f505e481bf9602f7ba5b1045e44e0392000b09a3b0000000022512032447fe28750a7e2b18af49d89a359a81c69bbf6f3db05feb7e8e1688f37e4c200000000";
+        let tx = hex::decode(tx).unwrap();
+        let bitwork = BitWork::new("88888888.11".to_string()).unwrap();
 
-    #[test]
-    fn test_find_time_nonce_script_position() {
-        log();
+        let now = Instant::now();
+        let commit_count = miner.mine_commit_counter().clone();
+        let tx_raw = miner.mine_commit(&tx, bitwork, 0, None);
+
+        let commit_count = commit_count.load(SeqCst);
+        info!("duration:{:?}, count:{:?}", now.elapsed(), commit_count);
+
+        let tx: bitcoin::Transaction = deserialize(tx_raw.as_slice()).unwrap();
+        println!("{}", tx.txid());
+    }
+    
+    pub fn mint_reveal_by(miner:&mut impl Miner){
         let tx = "01000000017b7afa047d43cb34409d453e11fc048314dd2ee58a5b20c1b0f6a8077b5634120000000000fdffffff02e803000000000000225120adb58bdbccaa9fdd6594859354b502214e3405a74d772a60e255e233468c4c7900000000000000000a6a08000000000000000100000000";
         let tx = hex::decode(tx).unwrap();
-        let position = find_time_nonce_script_position(&tx);
+        let bitwork = BitWork::new("12345688".to_string()).unwrap();
+        let secp = bitcoin::secp256k1::Secp256k1::new();
 
-        // print position and last data
-        info!("position: {}", position);
-        info!("last data: {:?}", &tx[position..position + 8]);
+        let now = Instant::now();
+        let reveal_count = miner.mine_reveal_counter().clone();
+        let reveal_tx = miner.mine_reveal(&tx, bitwork, 0, None);
 
-        assert_eq!(position, 101);
+        let reveal_count = reveal_count.load(SeqCst);
+        info!("duration:{:?}, count:{:?}", now.elapsed(), reveal_count);
+
+        let tx: bitcoin::Transaction = deserialize(reveal_tx.as_slice()).unwrap();
+        println!("{}", tx.txid())
     }
+    
 }

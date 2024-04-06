@@ -52,5 +52,6 @@ toml = "0.8.12"
 semver = "1.0.22"
 
 [features]
-default = []
+default = ["boardcast"]
+boardcast = []
 op_sha256 = []

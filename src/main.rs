@@ -92,7 +92,7 @@ async fn main() {
 
     if v1 < v2 {
         warn!("Please download the latest version, https://github.com/nishuzumi/collider/releases/latest");
-        
+
         if v1.major < v2.major || (v1.major == v2.major && v1.minor < v2.minor) {
             std::process::exit(0);
         }
@@ -145,20 +145,18 @@ fn collider_benchmark() {
         Cell::new("Commit Hash Rate (M/s)"),
         Cell::new("Reveal Hash Rate (M/s)"),
     ]));
-    for miner in miners {
+    for mut miner in miners {
         // commit
         let now = Instant::now();
         let _ = miner
-            .mine_commit(&commit_tx, bitwork.clone(), 0, None)
-            .unwrap();
+            .mine_commit(&commit_tx, bitwork.clone(), 0, None);
         let elapsed = now.elapsed();
         let hash_rate =
             miner.mine_commit_counter().load(Ordering::SeqCst) as f64 / elapsed.as_secs_f64();
 
         let now = Instant::now();
         let _ = miner
-            .mine_reveal(&reveal_tx, bitwork_r.clone(), 0, None)
-            .unwrap();
+            .mine_reveal(&reveal_tx, bitwork_r.clone(), 0, None);
         let elapsed = now.elapsed();
         let reveal_hash_rate =
             miner.mine_reveal_counter().load(Ordering::SeqCst) as f64 / elapsed.as_secs_f64();
@@ -259,21 +257,24 @@ async fn mint() {
 
     let commit_hex = encode::serialize_hex(&commit_result.commit_tx);
     // print the commit hex content
-    info!("🔍 Commit hex: {}", commit_hex);
-    electrumx
-        .broadcast(commit_hex)
-        .await
-        .expect("broadcast commit tx error");
     let testnet = if opts.testnet { "testnet/" } else { "" };
-    info!(
-        "🔍🎺 Commit tx broadcasted successfully! 🚀 {}",
-        format!(
-            "https://mempool.space/{}tx/{}",
-            testnet,
-            commit_result.commit_tx.txid()
-        )
-        .blue()
-    );
+    info!("🔍 Commit hex: {}", commit_hex);
+    #[cfg(feature = "boardcast")]
+    {
+        electrumx
+            .broadcast(commit_hex)
+            .await
+            .expect("broadcast commit tx error");
+        info!(
+            "🔍🎺 Commit tx broadcasted successfully! 🚀 {}",
+            format!(
+                "https://mempool.space/{}tx/{}",
+                testnet,
+                commit_result.commit_tx.txid()
+            )
+            .blue()
+        );
+    }
 
     let reveal_result = worker
         .build_reveal_tx(commit_result, &worker_data)
@@ -282,19 +283,22 @@ async fn mint() {
     let reveal_hex = encode::serialize_hex(&reveal_result);
     // print the reveal hex content
     info!("🔓 Reveal hex: {}", reveal_hex);
-    electrumx
-        .broadcast(reveal_hex)
-        .await
-        .expect("broadcast reveal tx error");
-    info!(
-        "🔓🎺 Reveal tx broadcasted successfully! 🚀 {}",
-        format!(
-            "https://mempool.space/{}tx/{}",
-            testnet,
-            reveal_result.txid()
-        )
-        .blue()
-    );
+    #[cfg(feature = "boardcast")]
+    {
+        electrumx
+            .broadcast(reveal_hex)
+            .await
+            .expect("broadcast reveal tx error");
+        info!(
+            "🔓🎺 Reveal tx broadcasted successfully! 🚀 {}",
+            format!(
+                "https://mempool.space/{}tx/{}",
+                testnet,
+                reveal_result.txid()
+            )
+            .blue()
+        );
+    }
 
     info!("🎉 Eureka! 💥 The Collider has successfully smashed the problem and computed the result! 🧪✨")
 }

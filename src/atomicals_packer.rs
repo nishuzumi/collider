@@ -9,7 +9,6 @@ use atomicals_electrumx::{Api, ElectrumX};
 /// Thanks for atomicalsir awesome work
 use atomicals_electrumx::r#type::Ft;
 
-use crate::util;
 use crate::util::{current_network, GLOBAL_OPTS};
 use crate::utils::bitworkc::BitWork;
 
@@ -25,9 +24,10 @@ pub struct TickerData {
     pub secp: Secp256k1<All>,
     pub satsbyte: u64,
     pub bitworkc: BitWork,
+    pub ticker:String,
     pub bitworkr: Option<BitWork>,
     pub additional_outputs: Vec<TxOut>,
-    pub payload: PayloadWrapper,
+    // pub payload: PayloadWrapper,
 }
 
 #[derive(Clone, Debug)]
@@ -44,10 +44,7 @@ pub struct PayloadWrapper {
 }
 #[derive(Debug, Serialize, Clone)]
 pub struct Payload {
-    pub bitworkc: String,
     pub mint_ticker: String,
-    pub nonce: u64,
-    pub time: u64,
 }
 impl AtomicalsPacker {
     pub fn new(electrumx: ElectrumX, network: Network, master_mode: bool) -> Self {
@@ -102,28 +99,18 @@ impl AtomicalsPacker {
                 .unwrap_or_else(|| ft.dft_info.mint_bitworkc_current.clone().unwrap()),
         )
         .expect("bitworkc parse error");
-        let payload = PayloadWrapper {
-            args: {
-                let (time, nonce) = util::time_nonce();
-
-                Payload {
-                    bitworkc: bitworkc.raw.clone(),
-                    mint_ticker: ft.ticker.clone(),
-                    nonce,
-                    time,
-                }
-            },
-        };
+        
         Ok(TickerData {
             secp,
             satsbyte,
             bitworkc,
+            ticker:ft.ticker.clone(),
             bitworkr: ft
                 .mint_bitworkr
                 .clone()
                 .map(|bitwork| BitWork::new(bitwork).unwrap()),
             additional_outputs,
-            payload,
+            // payload,
         })
     }
 }

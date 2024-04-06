@@ -12,7 +12,7 @@ use bitcoin::script::PushBytes;
 use bitcoin::secp256k1::All;
 use eyre::Result;
 use lazy_static::lazy_static;
-use rand::Rng;
+use rand::{Rng, thread_rng};
 use serde::Serialize;
 use structopt::StructOpt;
 
@@ -84,7 +84,7 @@ pub fn current_network() -> Network {
 pub fn log() {
     dotenvy::dotenv().ok();
     let subscriber = tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO) // 设置日志级别
+        .with_max_level(tracing::Level::DEBUG) // 设置日志级别
         .finish();
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
@@ -144,7 +144,6 @@ pub fn time_nonce() -> (u64, u64) {
 pub fn time_nonce_script(nonce: u64) -> ScriptBuf {
     Script::builder()
         .push_opcode(OP_RETURN)
-        // .push_slice(<&PushBytes>::try_from(format!("{:016X}", nonce).as_bytes()).unwrap())
         .push_slice(nonce.to_le_bytes())
         .into_script()
 }
@@ -188,7 +187,7 @@ pub fn build_reveal_script(
 }
 
 pub fn format_speed(speed: f64) -> String {
-    const UNITS: [&str; 4] = ["", "K", "M", "B"];
+    const UNITS: [&str; 4] = ["", "K", "M", "G"];
     let mut speed = speed;
     let mut unit_index = 0;
 

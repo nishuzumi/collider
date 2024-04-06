@@ -1,13 +1,14 @@
+use std::cell::RefCell;
 use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::{Duration, Instant};
 
 use bitcoin::{
-    Amount, OutPoint, Psbt, ScriptBuf, Sequence, TapLeafHash, TapSighashType,
-    Transaction, TxIn, TxOut, Witness,
+    Amount, OutPoint, Psbt, ScriptBuf, Sequence, TapLeafHash, TapSighashType, Transaction, TxIn,
+    TxOut, Witness,
 };
 use bitcoin::absolute::LockTime;
-use bitcoin::consensus::Encodable;
+use bitcoin::consensus::{deserialize, Encodable};
 use bitcoin::hashes::Hash;
 use bitcoin::key::{Keypair, Secp256k1};
 use bitcoin::psbt::Input;
@@ -21,15 +22,15 @@ use tokio::sync::oneshot;
 
 use atomicals_electrumx::r#type::Utxo;
 
-use crate::atomicals_packer::{Fees, TickerData};
+use crate::atomicals_packer::{Fees, Payload, PayloadWrapper, TickerData};
 use crate::miner::Miner;
 use crate::util;
 use crate::util::{format_speed, GLOBAL_OPTS, tx2bytes};
 
 #[derive(Debug, Clone)]
 pub struct PayloadScript {
-    // payload: PayloadWrapper,
-    // payload_encoded: Vec<u8>,
+    pub payload: PayloadWrapper,
+    pub payload_encoded: Vec<u8>,
     funding_spk: ScriptBuf,
     reveal_script: ScriptBuf,
     reveal_spend_info: TaprootSpendInfo,
@@ -56,24 +57,24 @@ struct PsbtData {
 /// So we only need know the tx in, and we can build the commit tx and reveal tx without any other information
 pub struct AtomicalsWorker {
     funding_wallet: Keypair,
-    miner: Box<dyn Miner>,
+    miner: RefCell<Box<dyn Miner>>,
 }
 
 impl AtomicalsWorker {
     const BASE_BYTES: f64 = 10.5;
-    const INPUT_BYTES_BASE: f64 = 57.5;
+    const INPUT_BYTES_BASE: f64 = 67.5;
     // Estimated 8-byte value, with a script size of one byte.
     // The actual size of the value is determined by the final nonce.
     const OP_RETURN_BYTES: f64 = 21. + 8. + 1.;
-    const OUTPUT_BYTES_BASE: f64 = 43.;
-    const REVEAL_INPUT_BYTES_BASE: f64 = 66.;
+    const OUTPUT_BYTES_BASE: f64 = 31.;
+    const REVEAL_INPUT_BYTES_BASE: f64 = 41.;
 
     const VERSION: Version = Version::ONE;
     const LOCK_TIME: LockTime = LockTime::ZERO;
     pub fn new(funding_wallet: Keypair, miner: Box<dyn Miner>) -> Self {
         AtomicalsWorker {
             funding_wallet,
-            miner,
+            miner: RefCell::new(miner),
         }
     }
     /// Generate the payload script
@@ -83,15 +84,17 @@ impl AtomicalsWorker {
             secp,
             satsbyte,
             additional_outputs,
-            payload,
+            ticker,
             ..
         } = ticker_data;
 
-        let mut payload = payload.clone();
-        // random nonce
-        let (time, nonce) = util::time_nonce();
-        payload.args.nonce = nonce;
-        payload.args.time = time;
+        let payload = PayloadWrapper {
+            args: {
+                Payload {
+                    mint_ticker: ticker.to_string(),
+                }
+            },
+        };
 
         let payload_encoded = util::cbor(&payload)?;
 
@@ -119,8 +122,8 @@ impl AtomicalsWorker {
         );
         let funding_spk = funding_wallet.p2tr_address(secp).script_pubkey();
         Ok(PayloadScript {
-            // payload,
-            // payload_encoded,
+            payload,
+            payload_encoded,
             funding_spk,
             reveal_script,
             reveal_spend_info,
@@ -172,7 +175,7 @@ impl AtomicalsWorker {
             }
         }
     }
-    
+
     fn build_psbt_data(
         &self,
         data: &TickerData,
@@ -226,7 +229,7 @@ impl AtomicalsWorker {
 
         let (compute_done_sender, compute_done_receiver) = oneshot::channel();
 
-        let counter = self.miner.mine_commit_counter();
+        let counter = self.miner.borrow_mut().mine_commit_counter();
         let handle = thread::spawn(move || {
             create_hash_rate_bar(
                 "Commit mining: ".to_string(),
@@ -234,29 +237,27 @@ impl AtomicalsWorker {
                 compute_done_receiver,
             );
         });
-        
-        let mut psbt_data = self.build_psbt_data(data, satsbyte, funding_utxo.clone(), 0, commit_input.clone())?;
+
+        let mut psbt_data = self.build_psbt_data(
+            data,
+            satsbyte,
+            funding_utxo.clone(),
+            0,
+            commit_input.clone(),
+        )?;
 
         // If there have not found the target sequence, we will return the None
-        let sequence = loop {
-            let psbt = psbt_data.psbt.clone();
+        let mut psbt = psbt_data.psbt.clone();
 
-            let mut serialize_tx = vec![];
-            psbt.unsigned_tx
-                .consensus_encode(&mut serialize_tx)
-                .unwrap();
+        let mut serialize_tx = vec![];
+        psbt.unsigned_tx
+            .consensus_encode(&mut serialize_tx)
+            .unwrap();
 
-            let sequence = self
-                .miner
-                .mine_commit(&serialize_tx, bitworkc.clone(), 0, None);
-            if let Some(sequence) = sequence {
-                break sequence;
-            }
-            
-            psbt_data = self.build_psbt_data(data, satsbyte, funding_utxo.clone(), 0, commit_input.clone())?;
-        };
-        
-        psbt_data.psbt.unsigned_tx.input[0].sequence = Sequence(sequence);
+        let mut miner = self.miner.borrow_mut();
+        let commit_tx = miner.mine_commit(&serialize_tx, bitworkc.clone(), 0, None);
+
+        psbt.unsigned_tx = deserialize(commit_tx.as_slice()).expect("Cant not deserialize the commit tx");
 
         // set it done
         compute_done_sender
@@ -267,11 +268,12 @@ impl AtomicalsWorker {
 
         let tap_key_sig = {
             let commit_hty = TapSighashType::Default;
-            let h = SighashCache::new(&psbt_data.psbt.unsigned_tx).taproot_key_spend_signature_hash(
-                0,
-                &Prevouts::All(&psbt_data.commit_prev_outs),
-                commit_hty,
-            )?;
+            let h = SighashCache::new(&psbt_data.psbt.unsigned_tx)
+                .taproot_key_spend_signature_hash(
+                    0,
+                    &Prevouts::All(&psbt_data.commit_prev_outs),
+                    commit_hty,
+                )?;
             let m = Message::from_digest(h.to_byte_array());
 
             Signature {
@@ -344,7 +346,7 @@ impl AtomicalsWorker {
 
         let reveal_tx = if let Some(bitworkr) = bitworkr {
             let (compute_done_sender, compute_done_receiver) = oneshot::channel();
-            let counter = self.miner.mine_reveal_counter();
+            let counter = self.miner.borrow_mut().mine_reveal_counter();
             let handle = thread::spawn(move || {
                 create_hash_rate_bar(
                     "Reveal mining: ".to_string(),
@@ -353,22 +355,19 @@ impl AtomicalsWorker {
                 );
             });
 
-            let sequence = loop {
-                let reveal_psbt = build_psbt(Some(0))?;
-                let tx_byte = tx2bytes(&reveal_psbt.unsigned_tx);
+            let mut reveal_psbt = build_psbt(Some(0))?;
+            let tx_byte = tx2bytes(&reveal_psbt.unsigned_tx);
 
-                let sequence = self.miner.mine_reveal(&tx_byte, bitworkr.clone(), 0, None);
-
-                if sequence.is_some() {
-                    break sequence.unwrap();
-                }
-            };
+            let mut miner = self.miner.borrow_mut();
+            let reveal_tx = miner.mine_reveal(&tx_byte, bitworkr.clone(), 0, None);
 
             compute_done_sender
                 .send(())
                 .expect("send done signal failed");
 
-            let mut reveal_psbt = build_psbt(Some(sequence))?;
+            reveal_psbt.unsigned_tx =
+                deserialize(reveal_tx.as_slice()).expect("Can not deserialize reveal tx");
+
             let mut serialize_tx = vec![];
             reveal_psbt
                 .unsigned_tx
@@ -462,7 +461,7 @@ impl AtomicalsWorker {
     ) -> Fees {
         let satsbyte = satsbyte as f64;
         let commit = {
-            (satsbyte * (Self::BASE_BYTES + Self::INPUT_BYTES_BASE + Self::OUTPUT_BYTES_BASE))
+            (satsbyte * (Self::BASE_BYTES + Self::INPUT_BYTES_BASE + Self::OUTPUT_BYTES_BASE + 1.))
                 .ceil() as u64
         };
         let reveal = {
@@ -483,11 +482,11 @@ impl AtomicalsWorker {
 
             (satsbyte
                 * (Self::BASE_BYTES
-        + Self::REVEAL_INPUT_BYTES_BASE
-        + (compact_input_bytes + reveal_script_len as f64) / 4.
-        // + utxos.len() as f64 * Self::INPUT_BYTES_BASE
-        + additional_outputs.len() as f64 * Self::OUTPUT_BYTES_BASE
-        + op_return_bytes))
+                    + Self::REVEAL_INPUT_BYTES_BASE
+                    + compact_input_bytes
+                    + reveal_script_len as f64 / 4.
+                    + additional_outputs.len() as f64 * (Self::OUTPUT_BYTES_BASE + 1.)
+                    + op_return_bytes))
                 .ceil() as u64
         };
         let outputs = additional_outputs
@@ -535,6 +534,7 @@ where
 #[cfg(test)]
 mod test {
     use std::sync::atomic::Ordering;
+    use std::sync::atomic::Ordering::SeqCst;
     use std::time::Duration;
 
     use bitcoin::consensus::{deserialize, Encodable, encode};
@@ -550,7 +550,7 @@ mod test {
     use crate::atomicals_worker::AtomicalsWorker;
     use crate::miner::cpu::CpuMiner;
     use crate::miner::Miner;
-    use crate::util::{GLOBAL_OPTS, log, time_nonce_script};
+    use crate::util::{GLOBAL_OPTS, log, time, time_nonce_script};
     use crate::utils::bitworkc::BitWork;
 
     #[tokio::test]
@@ -566,7 +566,11 @@ mod test {
             .unwrap();
         info!("{:?}", worker_data);
 
-        let funding_wallet = &GLOBAL_OPTS.funding_wallet.as_ref().unwrap().p2tr_address(&worker_data.secp);
+        let funding_wallet = &GLOBAL_OPTS
+            .funding_wallet
+            .as_ref()
+            .unwrap()
+            .p2tr_address(&worker_data.secp);
         let utxo = electrumx
             .wait_until_utxo(funding_wallet.to_string(), worker_data.satsbyte)
             .await
@@ -576,7 +580,11 @@ mod test {
         let miner = CpuMiner::new();
 
         let workder = AtomicalsWorker::new(
-            GLOBAL_OPTS.funding_wallet.as_ref().unwrap().keypair(&worker_data.secp),
+            GLOBAL_OPTS
+                .funding_wallet
+                .as_ref()
+                .unwrap()
+                .keypair(&worker_data.secp),
             Box::new(miner),
         );
 
@@ -601,45 +609,39 @@ mod test {
         log();
         let tx = "01000000012a912f654cc1bd88da5b8a54c52b6dd60b6e831bfba52b32c1314cd17c5634120100000000feffffff024c05000000000000225120e3d5a4789dc4982cfda563c8c23f988f505e481bf9602f7ba5b1045e44e0392000b09a3b0000000022512032447fe28750a7e2b18af49d89a359a81c69bbf6f3db05feb7e8e1688f37e4c200000000";
         let tx = hex::decode(tx).unwrap();
-        let miner = CpuMiner::new();
-        let bitwork = BitWork::new("1234567.14".to_string()).unwrap();
+        let mut miner = CpuMiner::new();
+        let bitwork = BitWork::new("8888888.14".to_string()).unwrap();
         let secp = bitcoin::secp256k1::Secp256k1::new();
 
         let now = Instant::now();
-        let nonce = miner.mine_commit(&tx, bitwork, 0, None);
-
+        let commit_count = miner.mine_commit_counter().clone();
+        let nonce = miner.mine_commit(&tx, bitwork, 0, Some(time() as u32));
+        let commit_count = commit_count.load(SeqCst);
         info!(
-            "nonce:{:?}, duration:{:?}, count:{:?}",
-            nonce,
+            "duration:{:?}, count:{:?}",
             now.elapsed(),
-            miner.mine_commit_counter().load(Ordering::Relaxed)
+            commit_count
         );
+        
+        let tx:bitcoin::Transaction = deserialize(nonce.as_slice()).unwrap();
+        println!("{}",tx.txid());
     }
     #[tokio::test]
     async fn test_reveal_work() {
         log();
         let tx = "01000000017b7afa047d43cb34409d453e11fc048314dd2ee58a5b20c1b0f6a8077b5634120000000000fdffffff02e803000000000000225120adb58bdbccaa9fdd6594859354b502214e3405a74d772a60e255e233468c4c7900000000000000000a6a08000000000000000100000000";
         let tx = hex::decode(tx).unwrap();
-        let miner = CpuMiner::new();
+        let mut miner = CpuMiner::new();
         let bitwork = BitWork::new("1234567.11".to_string()).unwrap();
         let secp = bitcoin::secp256k1::Secp256k1::new();
 
         let now = Instant::now();
-        let nonce = miner.mine_reveal(&tx, bitwork, 0, None);
+        let commit_count = miner.mine_reveal_counter().load(Ordering::Relaxed);
+        let reveal_tx = miner.mine_reveal(&tx, bitwork, 0, None);
 
-        info!(
-            "nonce:{:?}, duration:{:?}, count:{:?}",
-            nonce,
-            now.elapsed(),
-            miner.mine_reveal_counter().load(Ordering::Relaxed)
-        );
-        let mut tx: bitcoin::Transaction = deserialize(&tx).unwrap();
-        tx.output[1].script_pubkey = time_nonce_script(nonce.unwrap());
-        info!("tx:{:?}", tx);
+        info!("duration:{:?}, count:{:?}", now.elapsed(), commit_count);
 
-        let mut serialize = vec![];
-        tx.consensus_encode(&mut serialize).unwrap();
-        info!("reveal: {:?}", hex::encode(serialize));
-        info!("txid:{}", tx.txid());
+        let tx: bitcoin::Transaction = deserialize(reveal_tx.as_slice()).unwrap();
+        println!("{}", tx.txid())
     }
 }
