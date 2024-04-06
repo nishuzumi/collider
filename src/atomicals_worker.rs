@@ -535,12 +535,9 @@ where
 mod test {
     use std::sync::atomic::Ordering;
     use std::sync::atomic::Ordering::SeqCst;
-    use std::time::Duration;
 
-    use bitcoin::consensus::{deserialize, Encodable, encode};
+    use bitcoin::consensus::{deserialize, encode};
     use bitcoin::Network;
-    use bitcoin::p2p::message_blockdata::Inventory::Transaction;
-    use serde::de::Unexpected::Option;
     use tokio::time::Instant;
     use tracing::info;
 
@@ -550,7 +547,7 @@ mod test {
     use crate::atomicals_worker::AtomicalsWorker;
     use crate::miner::cpu::CpuMiner;
     use crate::miner::Miner;
-    use crate::util::{GLOBAL_OPTS, log, time, time_nonce_script};
+    use crate::util::{GLOBAL_OPTS, log, time};
     use crate::utils::bitworkc::BitWork;
 
     #[tokio::test]
@@ -611,7 +608,6 @@ mod test {
         let tx = hex::decode(tx).unwrap();
         let mut miner = CpuMiner::new();
         let bitwork = BitWork::new("8888888.14".to_string()).unwrap();
-        let secp = bitcoin::secp256k1::Secp256k1::new();
 
         let now = Instant::now();
         let commit_count = miner.mine_commit_counter().clone();
@@ -633,7 +629,6 @@ mod test {
         let tx = hex::decode(tx).unwrap();
         let mut miner = CpuMiner::new();
         let bitwork = BitWork::new("1234567.11".to_string()).unwrap();
-        let secp = bitcoin::secp256k1::Secp256k1::new();
 
         let now = Instant::now();
         let commit_count = miner.mine_reveal_counter().load(Ordering::Relaxed);

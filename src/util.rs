@@ -12,7 +12,6 @@ use bitcoin::script::PushBytes;
 use bitcoin::secp256k1::All;
 use eyre::Result;
 use lazy_static::lazy_static;
-use rand::{Rng, thread_rng};
 use serde::Serialize;
 use structopt::StructOpt;
 
@@ -137,9 +136,6 @@ pub fn time() -> u64 {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs()
-}
-pub fn time_nonce() -> (u64, u64) {
-    (time(), rand::thread_rng().gen_range(1..10_000_000))
 }
 pub fn time_nonce_script(nonce: u64) -> ScriptBuf {
     Script::builder()

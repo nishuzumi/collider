@@ -168,12 +168,14 @@ mod test{
     use crate::miner::tests::{mint_commit_by, mint_reveal_by};
     use crate::util::log;
 
+    #[test]
     fn test_commit(){
         log();
         let mut miner = CpuMiner::new();
         mint_commit_by(&mut miner);
     }
     
+    #[test]
     fn test_reveal(){
         log();
         let mut miner = CpuMiner::new();

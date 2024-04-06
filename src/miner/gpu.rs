@@ -2,7 +2,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use ocl::{Buffer, MemFlags, OclPrm, ProQue};
-use tracing::info;
 
 use crate::miner::{find_first_sequence_position, find_time_nonce_script_position, Miner};
 use crate::util::time;
@@ -301,8 +300,6 @@ pub fn generate_pro_que_params(
 
 #[cfg(test)]
 mod tests {
-    use ocl::{Context, Device, Platform, Queue};
-    use ocl::core::{DeviceInfo, DeviceInfoResult};
     use tracing::info;
 
     use crate::miner::tests::{mint_commit_by, mint_reveal_by};
