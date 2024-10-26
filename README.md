@@ -178,4 +178,4 @@ This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE.
 
 ## Contact
 
-For any inquiries or questions, please contact [boxmrchen@fastmail.com](mailto:boxmrchen@fastmail.com).
+For any inquiries or questions, please contact [box@bytemahou.com](mailto:box@bytemahou.com).
